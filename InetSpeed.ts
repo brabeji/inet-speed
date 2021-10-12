@@ -60,13 +60,15 @@ export class InetSpeed {
 	});
 	async collect() {
 		const timestamp = new Date().toISOString();
-		const speed = await speedTest({ acceptGdpr: true, acceptLicense: true });
-		const wifi = await getWifiDescription();
-		const weather = await (
-			await fetch(
-				`https://api.openweathermap.org/data/2.5/weather?lat=48.84577898333347&lon=14.754778197657101&appid=${process.env['OPEN_WEATHER_API_KEY']}`,
-			)
-		).json();
+		const [speed, wifi, weather] = await Promise.all([
+			speedTest({ acceptGdpr: true, acceptLicense: true }),
+			getWifiDescription(),
+			(
+				await fetch(
+					`https://api.openweathermap.org/data/2.5/weather?lat=48.84577898333347&lon=14.754778197657101&appid=${process.env['OPEN_WEATHER_API_KEY']}`,
+				)
+			).json(),
+		]);
 
 		await this.client.index({
 			index: 'inet-speed',
