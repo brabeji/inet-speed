@@ -16,7 +16,7 @@ export const sleep = (duration: number, rejectOnFinish?: boolean) =>
 				console.log('Collected at ', new Date().toISOString());
 			} catch (error) {
 				console.log(
-					'Failed to collected at ',
+					'Failed to collect at ',
 					new Date().toISOString(),
 					error instanceof Error ? error.message : error,
 				);

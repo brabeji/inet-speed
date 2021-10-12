@@ -2,6 +2,7 @@ import speedTest from 'speedtest-net';
 import { Client as ElasticClient } from '@elastic/elasticsearch';
 // @ts-expect-error
 import wifi from 'node-wifi';
+import fetch from 'node-fetch';
 
 wifi.init({ iface: null });
 
@@ -58,15 +59,18 @@ export class InetSpeed {
 		auth: { apiKey: process.env['ELASTIC_API_KEY'] ?? '' },
 	});
 	async collect() {
-		// console.log(process.platform, process.arch, 'node', process.version);
 		const timestamp = new Date().toISOString();
 		const speed = await speedTest({ acceptGdpr: true, acceptLicense: true });
 		const wifi = await getWifiDescription();
+		const weather = await (
+			await fetch(
+				`https://api.openweathermap.org/data/2.5/weather?lat=48.84577898333347&lon=14.754778197657101&appid=${process.env['OPEN_WEATHER_API_KEY']}`,
+			)
+		).json();
 
 		await this.client.index({
 			index: 'inet-speed',
-			body: { speed, wifi, '@timestamp': timestamp },
+			body: { speed, wifi, weather, '@timestamp': timestamp },
 		});
-		// console.log('OK');
 	}
 }
