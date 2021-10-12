@@ -1,0 +1,9 @@
+arrowParens: always
+printWidth: 100
+singleQuote: true
+trailingComma: all
+useTabs: true
+overrides:
+  - files: "*.test.ts"
+    options:
+      printWidth: 200
