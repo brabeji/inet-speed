@@ -60,19 +60,32 @@ export class InetSpeed {
 	});
 	async collect() {
 		const timestamp = new Date().toISOString();
-		const [speed, wifi, weather] = await Promise.all([
-			speedTest({ acceptGdpr: true, acceptLicense: true }),
-			getWifiDescription(),
+		const [speed, wifi, weather] = await Promise.allSettled([
+			speedTest({ acceptGdpr: true, acceptLicense: true }).catch(() => {
+				return undefined;
+			}),
+			getWifiDescription().catch(() => {
+				return undefined;
+			}),
 			(
 				await fetch(
 					`https://api.openweathermap.org/data/2.5/weather?lat=48.84577898333347&lon=14.754778197657101&appid=${process.env['OPEN_WEATHER_API_KEY']}`,
 				)
-			).json(),
+			)
+				.json()
+				.catch(() => {
+					return undefined;
+				}),
 		]);
 
 		await this.client.index({
 			index: 'inet-speed',
-			body: { speed, wifi, weather, '@timestamp': timestamp },
+			body: {
+				speed: speed.status === 'fulfilled' ? speed.value : undefined,
+				wifi: wifi.status === 'fulfilled' ? wifi.value : undefined,
+				weather: weather.status === 'fulfilled' ? weather.value : undefined,
+				'@timestamp': timestamp,
+			},
 		});
 	}
 }
