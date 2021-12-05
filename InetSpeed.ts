@@ -3,6 +3,7 @@ import { Client as ElasticClient } from '@elastic/elasticsearch';
 // @ts-expect-error
 import wifi from 'node-wifi';
 import fetch from 'node-fetch';
+import { performance } from 'perf_hooks';
 
 wifi.init({ iface: null });
 
@@ -58,34 +59,47 @@ export class InetSpeed {
 		node: process.env['ELASTIC_URL'],
 		auth: { apiKey: process.env['ELASTIC_API_KEY'] ?? '' },
 	});
-	async collect() {
+	async collect(fullMeasurement: boolean) {
 		const timestamp = new Date().toISOString();
-		const [speed, wifi, weather] = await Promise.allSettled([
-			speedTest({ acceptGdpr: true, acceptLicense: true }).catch(() => {
-				return undefined;
-			}),
+		const [wifi, latency, speed, weather] = await Promise.allSettled([
 			getWifiDescription().catch(() => {
 				return undefined;
 			}),
-			(
-				await fetch(
-					`https://api.openweathermap.org/data/2.5/weather?lat=48.84577898333347&lon=14.754778197657101&appid=${process.env['OPEN_WEATHER_API_KEY']}`,
-				)
-			)
-				.json()
-				.catch(() => {
-					return undefined;
-				}),
+			this.measureLatency(),
+			fullMeasurement
+				? speedTest({ acceptGdpr: true, acceptLicense: true }).catch(() => {
+						return undefined;
+				  })
+				: Promise.resolve(null),
+			fullMeasurement
+				? (
+						await fetch(
+							`https://api.openweathermap.org/data/2.5/weather?lat=48.84577898333347&lon=14.754778197657101&appid=${process.env['OPEN_WEATHER_API_KEY']}`,
+						)
+				  )
+						.json()
+						.catch(() => {
+							return undefined;
+						})
+				: Promise.resolve(null),
 		]);
 
 		await this.client.index({
 			index: 'inet-speed',
 			body: {
-				speed: speed.status === 'fulfilled' ? speed.value : undefined,
-				wifi: wifi.status === 'fulfilled' ? wifi.value : undefined,
-				weather: weather.status === 'fulfilled' ? weather.value : undefined,
 				'@timestamp': timestamp,
+				wifi: wifi.status === 'fulfilled' ? wifi.value : undefined,
+				latency: latency.status === 'fulfilled' ? latency.value : undefined,
+				speed: speed.status === 'fulfilled' ? speed.value : undefined,
+				weather: weather.status === 'fulfilled' ? weather.value : undefined,
 			},
 		});
+	}
+
+	async measureLatency() {
+		const start = performance.now();
+		await fetch(`https://status.cloud.google.com/en/feed.atom`);
+		const end = performance.now();
+		return end - start;
 	}
 }

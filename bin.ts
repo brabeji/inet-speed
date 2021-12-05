@@ -7,13 +7,19 @@ dotenv.config();
 export const sleep = (duration: number, rejectOnFinish?: boolean) =>
 	new Promise((resolve, reject) => setTimeout(rejectOnFinish ? reject : resolve, duration));
 
+const measurementPeriod = 5 * 1000;
+const fullMeasurementPeriod = 5 * 1000 * 60;
 (async () => {
+	let collectedCount = 0;
+
 	const speed = new InetSpeed();
 	while (true) {
 		(async () => {
 			try {
-				await speed.collect();
-				console.log('Collected at ', new Date().toISOString());
+				const fullMeasurement = !((collectedCount * measurementPeriod) % fullMeasurementPeriod);
+				collectedCount++;
+				await speed.collect(fullMeasurement);
+				console.log(`Collected at${fullMeasurement ? ` [FULL]` : ''}`, new Date().toISOString());
 			} catch (error) {
 				console.log(
 					'Failed to collect at ',
@@ -22,6 +28,6 @@ export const sleep = (duration: number, rejectOnFinish?: boolean) =>
 				);
 			}
 		})();
-		await sleep(300 * 1000);
+		await sleep(measurementPeriod);
 	}
 })();

@@ -14,7 +14,7 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@elastic/elasticsearch@^7.15.0":
+"@elastic/elasticsearch@7.15.0":
   version "7.15.0"
   resolved "https://registry.yarnpkg.com/@elastic/elasticsearch/-/elasticsearch-7.15.0.tgz#4b009a87e0b11b8cfd2e4f378f0292574bc17300"
   integrity sha512-FUKvjV2IKtIiWsvBy7D+wLbSEONsmNR15RRN7P/Sb30g4ObZRHH2qGOP5PPnzxdntEkzZ8HzY7nKKXFS+3Du1g==
