@@ -65,7 +65,9 @@ export class InetSpeed {
 			getWifiDescription().catch(() => {
 				return undefined;
 			}),
-			this.measureLatency(),
+			this.measureLatency().catch(() => {
+				return undefined;
+			}),
 			fullMeasurement
 				? speedTest({ acceptGdpr: true, acceptLicense: true }).catch(() => {
 						return undefined;
