@@ -16,7 +16,8 @@ const fullMeasurementPeriod = 5 * 1000 * 60;
 	while (true) {
 		(async () => {
 			try {
-				const fullMeasurement = !((collectedCount * measurementPeriod) % fullMeasurementPeriod);
+				// const fullMeasurement = !((collectedCount * measurementPeriod) % fullMeasurementPeriod);
+				const fullMeasurement = false;
 				collectedCount++;
 				await speed.collect(fullMeasurement);
 				console.log(`Collected at${fullMeasurement ? ` [FULL]` : ''}`, new Date().toISOString());
